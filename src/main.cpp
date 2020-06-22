@@ -1,49 +1,46 @@
 #include <iostream>
-#include <limits>
 #include <cstdlib>
 #include <string>
 #include <math.h>
 #include <sphere.h>
 #include <hitablelist.h>
 #include <camera.h>
+#include <material.h>
 using namespace AMB;
-
 /////////////////////////////////////////////////////////////////////
 //
-vec3 random_in_unit_sphere()
-{
-   vec3 p;
-   do
-   {
-      p = 2.0 * vec3 (drand48(), drand48(), drand48()) - vec3 (1,1,1);
-   } while (p.squared_length() >= 1.0);
-
-   return p;
-}
-/////////////////////////////////////////////////////////////////////
-//
-vec3 color (const ray& r, hitable* world)
+vec3 color (const ray& r, const hitable& world, int depth)
 {
    hit_record rec;
-   if (world->hit (r, 0.001, std::numeric_limits<float>::max(), rec))
+
+   if (depth <= 0)
+      return vec3 (0,0,0);
+
+   if (world.hit (r, 0.001, std::numeric_limits<float>::max(), rec))
    {
-      vec3 target = rec.p + rec.normal + random_in_unit_sphere();
-      return 0.5 * color (ray (rec.p, target - rec.p), world);
+      ray scattered;
+      vec3 attenuation;
+      if (rec.mat_ptr->scatter (r, rec, attenuation, scattered))
+      {
+         return attenuation * color (scattered, world, depth-1);
+      }
+      return vec3 (0,0,0);      
    }
-   else 
-   {
-      vec3 unit_dir = unit_vector (r.direction());
-      float t = 0.5 * (unit_dir.y() + 1.0);
-      return (1.0-t) * vec3(1.0, 1.0, 1.0) + t*vec3(0.5, 0.7, 1.0);   
-   }   
+
+   vec3 unit_dir = unit_vector (r.direction());
+   float t = 0.5 * (unit_dir.y() + 1.0);
+   return (1.0-t) * vec3(1.0, 1.0, 1.0) + t*vec3(0.5, 0.7, 1.0);   
 }
 /////////////////////////////////////////////////////////////////////
 //
 int main(int argc, char* argv[]) 
 {
-   int nx = 200;
-   int ny = 100;
-   int ns = 1;
+   //int nx = 200;
+   //int ny = 100;
+   int nx = 1024;
+   int ny = 576;
+   int ns = 20;
+   const int max_depth = 50;
 
    if (argc > 1)
       ns = std::stoi (argv[1]);
@@ -51,10 +48,18 @@ int main(int argc, char* argv[])
    std::clog << "Using " << ns << " samples/pixel\n";
    std::cout << "P3\n" << nx << " " << ny << "\n255\n";   
 
-   hitable *list[2];
-   list[0] = new sphere (vec3 (0,0,-1), 0.5);
-   list[1] = new sphere (vec3 (0,-100.5,-1), 100);
-   hitable* world = new hitable_list (list, 2);
+   hitable_list world;
+   world.add (make_shared<sphere>(
+      vec3 (0,0,-1), 0.5, make_shared<lambertian>(vec3 (0.7, 0.3, 0.3))));
+
+   world.add (make_shared<sphere>(
+      vec3 (0,-100.5,-1), 100, make_shared<lambertian>(vec3 (0.8, 0.8, 0.0))));
+
+   world.add (make_shared<sphere>(
+      vec3 (1,0,-1), 0.5, make_shared<metal>(vec3(0.8, 0.6, 0.2), 0.3)));
+
+   world.add (make_shared<sphere>(
+      vec3 (-1,0,-1), 0.5, make_shared<metal>(vec3(0.8, 0.8, 0.8), 1.0)));
 
    camera cam;
    float offset_u = 0.0;
@@ -70,15 +75,14 @@ int main(int argc, char* argv[])
             float u = float (i + offset_u) / float (nx);
             float v = float (j + offset_v) / float (ny);
             ray r = cam.get_ray (u, v);
-            //vec3   p = r.point_at_parameter (2.0);
-            col += color (r, world);
+            col += color (r, world, max_depth);
             offset_u = drand48();
             offset_v = drand48();
          }
          col /= float (ns);
 
          // Corrección gamma 2.0 (col = pow(1/gamma) = pow(1/2) = sqrt())
-         //col = vec3 (sqrt (col.r()), sqrt (col.g()), sqrt (col.b()));
+         col = vec3 (sqrt (col.r()), sqrt (col.g()), sqrt (col.b()));
          int ir = int (255.99*col.r());
          int ig = int (255.99*col.g());
          int ib = int (255.99*col.b());

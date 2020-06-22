@@ -12,7 +12,7 @@ public:
     ray(const vec3& origin, const vec3& dir);
     vec3 origin() const;
     vec3 direction() const;
-    vec3 point_at_parameter (float t) const;
+    vec3 at (float t) const;
 
 private:
     vec3 _origin;

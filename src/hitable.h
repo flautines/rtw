@@ -1,15 +1,25 @@
 #pragma once
 
 #include <ray.h>
+#include <memory>
+#include <vector>
 
+using std::shared_ptr;
+using std::make_shared;
+
+//#include <material.h>
 namespace AMB
 {
 
+// forward declaration, defined in material.h
+class material;
+
 struct hit_record
 {
-    float t;
-    vec3 p;
-    vec3 normal;
+    float     t;
+    vec3      p;
+    vec3      normal;
+    shared_ptr<material> mat_ptr;
 };
 
 class hitable

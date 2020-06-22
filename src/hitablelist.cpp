@@ -11,10 +11,21 @@ hitable_list::hitable_list()
 }
 /////////////////////////////////////////////////////////////////////
 //
-hitable_list::hitable_list (hitable** l, int n) :
-    _list { l }, _list_size { n }
+hitable_list::hitable_list(shared_ptr<hitable> object)
 {
-
+    add (object);
+}
+/////////////////////////////////////////////////////////////////////
+//
+void hitable_list::clear()
+{
+    _objects.clear();
+}
+/////////////////////////////////////////////////////////////////////
+//
+void hitable_list::add(shared_ptr<hitable> object)
+{
+    _objects.push_back (object);
 }
 /////////////////////////////////////////////////////////////////////
 //
@@ -24,9 +35,9 @@ bool hitable_list::hit (const ray& r, float t_min, float t_max, hit_record& rec)
     bool hit_anything = false;
     double closest_so_far = t_max;
 
-    for (int i = 0; i < _list_size; i++)
+    for (const auto& object : _objects)
     {
-        if (_list[i]->hit (r, t_min, closest_so_far, tmp_rec))
+        if (object->hit (r, t_min, closest_so_far, tmp_rec))
         {
             hit_anything = true;
             closest_so_far = tmp_rec.t;

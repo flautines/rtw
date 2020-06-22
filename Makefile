@@ -7,7 +7,9 @@ OBJFILES 	:= ${OBJDIR}/main.o \
 			   ${OBJDIR}/ray.o  \
 			   ${OBJDIR}/hitablelist.o \
 			   ${OBJDIR}/sphere.o \
-			   ${OBJDIR}/camera.o
+			   ${OBJDIR}/camera.o \
+			   ${OBJDIR}/material.o \
+			   ${OBJDIR}/utils.o
 INCDIRS		:= ${SRCDIR}
 CFLAGS 		:= -Wall -pedantic -I${INCDIRS} -std=c++17
 LDFLAGS		:=

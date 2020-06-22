@@ -9,8 +9,8 @@ sphere::sphere()
 
 }
 
-sphere::sphere(vec3 c, float r) :
-    _center { c }, _radius { r }
+sphere::sphere(vec3 c, float r, shared_ptr<material> m) :
+    _center { c }, _radius { r }, _mat_ptr { m }
 {
 
 }
@@ -29,16 +29,18 @@ bool sphere::hit (const ray& r, float t_min, float t_max, hit_record& rec) const
         if (t < t_max && t > t_min)
         {
             rec.t = t;
-            rec.p = r.point_at_parameter (rec.t);
+            rec.p = r.at (rec.t);
             rec.normal = (rec.p - _center) / _radius;
+            rec.mat_ptr = _mat_ptr;
             return true;
         }
         t = (-b + sqrt (b*b - a*c)) / a;
         if (t < t_max && t > t_min)
         {
             rec.t = t;
-            rec.p = r.point_at_parameter (rec.t);
+            rec.p = r.at (rec.t);
             rec.normal = (rec.p - _center) / _radius;
+            rec.mat_ptr = _mat_ptr;
             return true;
         }
     }

@@ -23,7 +23,7 @@ vec3 ray::direction() const
     return _direction;
 }
 
-vec3 ray::point_at_parameter (float t) const    
+vec3 ray::at (float t) const    
 {
     return _origin + t * _direction;
 }
